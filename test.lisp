@@ -1,14 +1,14 @@
 (require 'asdf)
 (asdf:operate 'asdf:load-op :cl-event)
-(asdf:operate 'asdf:load-op :trivial-sockets)
+(asdf:operate 'asdf:load-op :usocket)
 
 (in-package :event)
 
 (defun set-sock1 ()
-  (setf sock1 (trivial-sockets:open-stream "localhost" 1234)))
+  (setf sock1 (usocket:socket-stream (usocket:socket-connect "localhost" 1234))))
 
 (defun set-sock2 ()
-  (setf sock2 (trivial-sockets:open-stream "localhost" 1235)))
+  (setf sock2 (usocket:socket-stream (usocket:socket-connect "localhost" 1235))))
 
 
 
@@ -34,7 +34,7 @@
 (event-init)
 (set-sock1)
 (set-sock2)
-;;(add-stream1)
+;(add-stream1)
 ;(add-stream2)
 (new-add-stream sock1)
 (new-add-stream sock2)
