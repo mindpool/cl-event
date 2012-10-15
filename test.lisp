@@ -1,41 +1,29 @@
 (require 'asdf)
 (asdf:operate 'asdf:load-op :cl-event)
-(asdf:operate 'asdf:load-op :usocket)
+(ql:quickload "usocket")
+(ql:quickload "xlunit")
 
-(in-package :event)
+;(in-package :event)
 
-(defun set-sock1 ()
-  (setf sock1 (usocket:socket-stream (usocket:socket-connect "localhost" 1234))))
+(defpackage #:event-tests
+  (:use #:cl #:xlunit #:event)
+  (:export #:event-test-suite))
 
-(defun set-sock2 ()
-  (setf sock2 (usocket:socket-stream (usocket:socket-connect "localhost" 1235))))
+(in-package #:event-tests)
 
+(defclass file-test-case (test-case)
+  ()
+  (:documentation "Exercise the functionality of local fds in libevent"))
 
+(def-test-method test-read ((test file-test-case) :run nil)
+  ;--- TODO (oubiwann@mindpool.io): define a callback for once the file is
+  ;                                 read; the callback should have the assert
+  ;                                 in it
+  ;--- TODO (oubiwann@mindpool.io): get a pipe or something similar for lisp
+  ;--- TODO (oubiwann@mindpool.io): create an event with the cb and the fd,
+  ;                                 seeing the event type as EV_READ
+  ;--- TODO (oubiwann@mindpool.io): write text to the pipe
+  ;--- TODO (oubiwann@mindpool.io): call event-dispatch
+  (assert-true (= 5 5)))
 
-(defun add-stream (st)
-  (setf e (make-instance 'event))
-  (event-set e st (make-flags :ev-persist t) (lambda (sock) (format t "Read:~a~%" (read-line sock))) st)
-  (event-add e))
-
-
-(defun new-add-stream (st)
-  (add-event-callback st (make-flags :ev-persist t)
-                      (lambda (sock)
-                        (format t "Readededed :~a~%" (read-line sock))
-                        (format sock "Stuff~%")) st))
-
-(defun add-stream1 ()
-  (add-stream sock1))
-
-(defun add-stream2 ()
-  (add-stream sock2))
-
-;;; now the test part
-(event-init)
-(set-sock1)
-(set-sock2)
-;(add-stream1)
-;(add-stream2)
-(new-add-stream sock1)
-(new-add-stream sock2)
-(event-dispatch)
+(textui-test-run (get-suite file-test-case))
