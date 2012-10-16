@@ -2,8 +2,15 @@
 cl-event
 ########
 
+
 Usage
 *****
+
+
+Beginning Your Code
++++++++++++++++++++
+
+To use this ``cl-event``, start out with creating a callback and a stream:
 
 .. code:: lisp
 
@@ -13,32 +20,57 @@ Usage
 
     (defvar s ( ... open stream ... ))
 
+    ; initialize libevent
+    (event-init)
 
-Usage Approaches
-================
-
-Functions
-+++++++++
-
-.. code:: lisp
-
-    (event-init) ;; initialize libevent
-    (defvar e (make-instance 'event)) ;; create an instance of an event
-    (event-set e s (make-flags :ev-persist t) 'my-callback s) ;; associate event with a callback and a stream
-    (event-add e) ;; add event to libevent event-base
-
-    (event-dispatch) ;; main loop of libevent, calls my-callback whenever there is anything to read on s
+and then either explicitly calling functions from the API or using a
+convenience function instead.
 
 
-Objects
-+++++++
+The Middle Bits
++++++++++++++++
 
-or this way:
-consider we have a CLOS object containing a stream and other stuff called c
-and a method called READ-CONNECTION that takes a connection object as
-argument.
+
+Option 1: Explicit Calls
+========================
+
+Here are the functions that you'll need to call in order to create an event and
+have it scheduled:
 
 .. code:: lisp
 
-    (add-event-callback (connection-stream c) (make-flags :ev-persist t) 'read-connection c)
+    ; create an instance of an event
+    (defvar e (make-instance 'event))
+    ; associate event with a callback and a stream
+    (event-set e s (make-flags :ev-persist t) 'my-callback s)
+    ; add event to libevent event-base
+    (event-add e)
+
+
+Option 2: Using an Object
+=========================
+
+If you would rather use the convenience function ``add-event-callback``, you
+won't need to manually instantiate an event as was illustrated in the "Explicit
+Calls" section.
+
+Consider that we have defiend a CLOS object (elsewhere) containing a stream and
+other stuff called ``CONNECTION`` and a method called ``READ-CONNECTION`` that
+takes a ``CONNECTION`` object as argument. You can can implicitly create an
+event, set the callback on it, and then schedule the event with the the
+``add-event-callback`` convenience function:
+
+.. code:: lisp
+
+    (add-event-callback (connection-stream connection)
+      (make-flags :ev-persist t) 'read-connection connection)
+
+
+Finishing Up
+++++++++++++
+
+.. code:: lisp
+
+    ; main loop of libevent, calls my-callback (or read-connection) as defined
+    above whenever there is anything to read on the given stream
     (event-dispatch)
